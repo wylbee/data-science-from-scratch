@@ -82,3 +82,79 @@ def data_range(xs: List[float]) -> float:
     return max(xs) - min(xs)
 
 assert data_range(num_friends) == 99
+
+import os
+os.chdir('C:\\Users\\brown\\Desktop\\learning_projects\\data-science-from-scratch\\')
+
+from linear_algebra import sum_of_squares
+
+def de_mean(xs: List[float]) -> List[float]:
+    """Translate xs by subtracting its mean (so the result has mean 0)"""
+    x_bar = mean(xs)
+    return [x - x_bar for x in xs]
+
+def variance(xs: List[float]) -> float:
+    """Almost the average squares deviation from the mean"""
+    assert len(xs) >= 2, "variance requires at least two elements"
+
+    n = len(xs)
+    deviations = de_mean(xs)
+    return sum_of_squares(deviations) / (n - 1)
+
+#assert 81.54 < variance(num_friends) < 81.55
+
+import math
+
+def standard_deviation(xs: List[float]) -> float:
+    """The standard deviation is the square root of the variance"""
+    return math.sqrt(variance(xs))
+
+# assert 9.02 < standard_deviation(num_friends) < 9.04
+
+def interquartile_range(xs: List[float]) -> float:
+    """Returns the difference between the 75%-ile and the 25%-ile"""
+    return quantile(xs, .75) - quantile(xs, .25)
+
+#assert interquartile_range(num_friends) == 6
+
+# %% codecell
+# Correlation
+from linear_algebra import dot
+
+def covariance(xs: List[float], ys: List[float]) -> float:
+    assert len(xs) == len(ys), "xs and ys must have the same number of elements"
+
+    return dot(de_mean(xs), de_mean(ys)) / (len(xs) - 1)
+
+# assert 22.42 < covariance(num_friends, daily_minutes) < 22.43
+# assert 22.42 / 60 < covariance(num_friends, daily_minutes) < 22.43 / 60
+
+def correlation(xs: List[float], ys: List[float]) -> float:
+    """Measures how much xs and ys vary in tandem about their means"""
+    stdev_x = standard_deviation(xs)
+    stdev_y = standard_deviation(ys)
+    if stdev_x > 0 and stdev_y > 0:
+        return covariance(xs, ys) / stdev_x / stdev_y
+    else:
+        return 0
+
+#assert 0.24 < correlation(num_friends, daily_minutes) < 0.25
+#assert 0.24 < correlation(num_friends, daily_hours) < 0.25
+
+outlier = num_friends.index(100)    # index of outlier
+
+num_friends_good = [x
+                    for i, x in enumerate(num_friends)
+                    if i != outlier]
+
+daily_minutes_good = [x
+                      for i, x in enumerate(daily_minutes)
+                      if i != outlier]
+
+daily_hours_good = [dm / 60 for dm in daily_minutes_good]
+
+#assert 0.57 < correlation(num_friends_good, daily_minutes_good) < 0.58
+#assert 0.57 < correlation(num_friends_good, daily_hours_good) < 0.58
+
+# %% codecell
+# Simpson's Paradox
