@@ -91,3 +91,78 @@ power = 1 - type_2_probability
 
 # %% codecell
 # p-values
+def two_sided_p_value(x: float, mu: float = 0, sigma: float = 1) -> float:
+    """
+    How likely are we to see a value at least as extreme as x (in either
+    direction) if our values are from an N(mu, sigma)?
+    """
+    if x >= mu:
+        # x is greater than the mean, so the tail is everything greater than x
+        return 2 * normal_probability_above(x, mu, sigma)
+    else:
+        # x is less than the mean, so the tail is everything less than x
+        return 2 * normal_probability_below(x, mu, sigma)
+
+two_sided_p_value(529.5, mu_0, sigma_0)
+
+import random
+
+extreme_value_count = 0
+for _ in range(1000):
+    num_heads = sum(1 if random.random() < .5 else 0
+                    for _ in range(1000))
+    if num_heads >= 530 or num_heads <= 470:
+        extreme_value_count += 1
+
+# p-value was .-62 => ~62 extreme values out of 1000
+assert 59 < extreme_value_count < 65, f"{extreme_value_count}"
+
+two_sided_p_value(531.5, mu_0, sigma_0)
+
+upper_p_value = normal_probability_above
+lower_p_value = normal_probability_below
+
+upper_p_value(524.5, mu_0, sigma_0)
+
+upper_p_value(526.5, mu_0, sigma_0)
+
+# %% codecell
+# Confidence Intervals
+
+#math.sqrt(p * (1 - p) / 1000)
+
+p_hat = 525 / 1000
+mu = p_hat
+sigma = math.sqrt(p_hat * (1 - p_hat) / 1000)
+
+normal_two_sided_bounds(.95, mu, sigma)
+
+p_hat = 540 / 1000
+mu = p_hat
+sigma = math.sqrt(p_hat * (1 - p_hat) / 1000)
+normal_two_sided_bounds(.95, mu, sigma)
+
+# %% codecell
+# p-hacking
+
+from typing import List
+
+def run_experiment() -> List[bool]:
+    """Flips a fair coin 1000 times, True = heads, False = tails"""
+    return [random.random() < .5 for _ in range(1000)]
+
+def reject_fairness(experiment: List[bool]) -> bool:
+    """Using the 5% significance levels"""
+    num_heads = len([flip for flip in experiment if flip])
+    return num_heads < 469 or num_heads > 531
+
+random.seed(0)
+experiments = [run_experiment() for _ in range(1000)]
+num_rejections = len([experiment
+                        for experiment in experiments
+                        if reject_fairness(experiment)])
+
+assert num_rejections == 46
+
+# %% codecell
+# Example: Running an A/B Test
