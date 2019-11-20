@@ -72,7 +72,7 @@ plt.show()
 
 def inverse_normal_cdf(p: float,
                         mu: float = 0,
-                        signma: float = 1,
+                        sigma: float = 1,
                         tolerance: float = .00001) -> float:
     """find the approximate inverse using binary search"""
 
@@ -94,3 +94,36 @@ def inverse_normal_cdf(p: float,
 
 # %% codecell
 # Central Limit Theorem
+def bernoulli_trial(p: float) -> int:
+    """Returns 1 with the probability p and 0 with probability 1-p"""
+    return 1 if random.random() < p else 0
+
+def binomial(n: int, p: float) -> int:
+    """Returns the sum of n bernoulli(p) trials"""
+    return sum(bernoulli_trial(p) for _ in range(n))
+
+from collections import Counter
+
+def binomial_histogram(p: float, n: int, num_points: int) -> None:
+    """Picks points from a binomial(n, p) and plots their histogram"""
+    data = [binomial(n, p) for _ in range(num_points)]
+
+    # use a bar chart to show the actual binomial samples
+    histogram = Counter(data)
+    plt.bar([x - .4 for x in histogram.keys()],
+            [v / num_points for v in histogram.values()],
+            .8,
+            color = '.75')
+
+    mu = p * n
+    sigma = math.sqrt(n * p * (1 - p))
+
+    # use a line chart to show the normal approximation
+    xs = range(min(data), max(data) + 1)
+    ys = [normal_cdf(i + .5, mu, sigma) - normal_cdf(i - .5, mu, sigma)
+            for i in xs]
+    plt.plot(xs, ys)
+    plt.title("Binomial Distribution vs. Normal Approximation")
+    plt.show()
+
+binomial_histogram(.75,100,10000)
